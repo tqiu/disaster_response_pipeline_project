@@ -5,6 +5,7 @@ from sqlalchemy import create_engine
 
 
 def load_data(messages_filepath, categories_filepath):
+    """ Read and merge two csv files """
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
     # merge datasets
@@ -13,6 +14,7 @@ def load_data(messages_filepath, categories_filepath):
 
 
 def clean_data(df):
+    """ Clean and transform the dataframe """
     # create a dataframe of the 36 individual category columns
     new = df.categories.str.split(';', expand=True)
     # extract a list of new column names for categories
@@ -37,11 +39,14 @@ def clean_data(df):
 
 
 def save_data(df, database_filename):
-    engine = create_engine('sqlite:///data/DisasterResponseDatabase.db')
+    """ Save the cleaned dataframe to a database """
+    engine = create_engine(f'sqlite:///{database_filename}')
     df.to_sql(database_filename, engine, index=False)
 
 
 def main():
+    """ Execute the ETL pipeline """
+
     if len(sys.argv) == 4:
 
         messages_filepath, categories_filepath, database_filepath = sys.argv[1:]

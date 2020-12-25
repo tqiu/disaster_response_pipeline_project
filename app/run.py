@@ -1,3 +1,4 @@
+# Load required libraries
 import json
 import plotly
 import pandas as pd
@@ -18,6 +19,8 @@ from customized_feature import GetReadabilityIndex
 app = Flask(__name__)
 
 def tokenize(text):
+    """ Returns a list of tokens for the input text (str) """
+
     tokens = word_tokenize(text)
     lemmatizer = WordNetLemmatizer()
 
@@ -28,9 +31,10 @@ def tokenize(text):
 
     return clean_tokens
 
+
 # load data
 engine = create_engine('sqlite:///../data/DisasterResponseDatabase.db')
-df = pd.read_sql_table('DisasterResponse.db', engine)
+df = pd.read_sql_table('data/DisasterResponseDatabase.db', engine)
 
 # load model
 model = joblib.load("../models/classifier.pkl")
@@ -40,6 +44,7 @@ model = joblib.load("../models/classifier.pkl")
 @app.route('/')
 @app.route('/index')
 def index():
+    """ Render web pages with plotly graphs which provides an overview of data """
 
     # extract data needed for visuals
     genre_counts = df.groupby('genre').count()['message']
@@ -110,6 +115,8 @@ def index():
 # web page that handles user query and displays model results
 @app.route('/go')
 def go():
+    """ Render web page that handles user query and displays model results"""
+    
     # save user input in query
     query = request.args.get('query', '')
 

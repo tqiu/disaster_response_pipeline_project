@@ -19,7 +19,7 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from xgboost import XGBClassifier
 from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.multioutput import MultiOutputClassifier
-from sklearn.model_selection import RandomizedSearchCV
+from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import classification_report
 
 
@@ -85,11 +85,9 @@ def build_model():
               'clf__estimator__colsample_bytree': [0.6, 0.8],
               'clf__estimator__max_depth': [3, 4, 5]}
 
+    grid_search = GridSearchCV(pipeline, param_grid=params, cv=3)
 
-    random_search = RandomizedSearchCV(pipeline, param_distributions=params,
-                    n_iter=20, random_state=42, cv=3)
-
-    return random_search
+    return grid_search
 
 
 def evaluate_model(model, X_test, Y_test, category_names):

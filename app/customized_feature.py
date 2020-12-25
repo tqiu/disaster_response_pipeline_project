@@ -1,4 +1,5 @@
 # Add a Readability index (Gunning-Fog Grade Index) feature
+
 from sklearn.base import BaseEstimator, TransformerMixin
 import pandas as pd
 import numpy as np
@@ -13,6 +14,7 @@ nltk.download('wordnet')
 
 
 def tokenize(text):
+    """ Returns a list of tokens for the input text (str) """
     # normalize case and remove punctuation
     text = re.sub(r"[^a-zA-Z0-9]", " ", text.lower())
 
@@ -28,6 +30,18 @@ def tokenize(text):
 
 
 class GetReadabilityIndex(BaseEstimator, TransformerMixin):
+    """
+    A class to create a Gunning-Fog Grade Index (readability index)
+    ------
+    Methods:
+        sentence_count(text): count number of sentences in the text
+        word_count(text): count number of tokens in the text
+        hard_word_count(text): count number of hard words in the text
+        fog_index(text): compute the Gunning-Fog Grade Index for the text
+        fit(x, y=None): return the same fit function from BaseEstimator
+        transform(X): apply the fog_index(text) to X, transform X and return the fog_index 
+            in a dataframe
+    """
 
     def sentence_count(self, text):
         sent = sent_tokenize(text)

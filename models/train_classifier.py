@@ -1,3 +1,4 @@
+# Load required libraries
 import sys
 import pandas as pd
 import numpy as np
@@ -5,17 +6,6 @@ from sqlalchemy import create_engine
 from sklearn.model_selection import train_test_split
 import dill as pickle
 from customized_feature import GetReadabilityIndex
-
-n_class = 36
-
-def load_data(database_filepath):
-    df = pd.read_sql_table(database_filepath, 'sqlite:///../data/DisasterResponseDatabase.db')
-    X = df['message'].values
-    Y = df.iloc[:,-n_class:].values
-    category_names = df.columns[-n_class:]
-    return X, Y, category_names
-
-
 import re
 import nltk
 from nltk.corpus import stopwords
@@ -24,8 +14,38 @@ from nltk.tokenize import word_tokenize, sent_tokenize
 nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('wordnet')
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
+from xgboost import XGBClassifier
+from sklearn.pipeline import Pipeline, FeatureUnion
+from sklearn.multioutput import MultiOutputClassifier
+from sklearn.model_selection import RandomizedSearchCV
+from sklearn.metrics import classification_report
+
+
+n_class = 36
+
+def load_data(database_filepath):
+    """ 
+    Load data from a database into a dataframe 
+    ------
+    Parameters:
+        database_filepath (str): relative filepath for the database
+    ------
+    Returns:
+        X (numpy 1d array): messages as predictor
+        Y (numpy 2d array): classification labels 0, 1 or 2
+        category_names (list): category names
+    """
+    df = pd.read_sql_table(database_filepath, f'sqlite:///{database_filepath}')
+    X = df['message'].values
+    Y = df.iloc[:,-n_class:].values
+    category_names = df.columns[-n_class:]
+    return X, Y, category_names
+
 
 def tokenize(text):
+    """ Returns a list of tokens for the input text (str) """
     # normalize case and remove punctuation
     text = re.sub(r"[^a-zA-Z0-9]", " ", text.lower())
 
@@ -40,14 +60,9 @@ def tokenize(text):
     return tokens
 
 
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfTransformer
-from xgboost import XGBClassifier
-from sklearn.pipeline import Pipeline, FeatureUnion
-from sklearn.multioutput import MultiOutputClassifier
-from sklearn.model_selection import RandomizedSearchCV
-
 def build_model():
+    """ Build an NLP & ML pipeline with grid search """
+
     pipeline = Pipeline([
         ('features', FeatureUnion([
 
@@ -77,9 +92,20 @@ def build_model():
     return random_search
 
 
-from sklearn.metrics import classification_report
-
 def evaluate_model(model, X_test, Y_test, category_names):
+    """ 
+    Make predictions on the test set and print a classification report for each category
+    ------
+    Parameters:
+        model: trained model
+        X_test (numpy 1d array): messages as predictor
+        Y_test (numpy 2d array): classification labels 0, 1 or 2
+        category_names (list): category names
+    ------
+    Returns:
+        None. Print out each category name and the corresponding classification report with precison, 
+        recall and f1-score
+    """
     Y_pred = model.predict(X_test)
     for i in range(len(category_names)):
         print(category_names[i])
@@ -87,11 +113,14 @@ def evaluate_model(model, X_test, Y_test, category_names):
 
 
 def save_model(model, model_filepath):
+    """ Save model to a pickle file """
     with open(model_filepath, 'wb') as file:
         pickle.dump(model, file)
 
 
 def main():
+    """ Execute the entire ML pipeline """
+    
     if len(sys.argv) == 3:
         database_filepath, model_filepath = sys.argv[1:]
         print('Loading data...\n    DATABASE: {}'.format(database_filepath))

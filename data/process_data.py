@@ -15,6 +15,7 @@ def load_data(messages_filepath, categories_filepath):
 
 def clean_data(df):
     """ Clean and transform the dataframe """
+
     # create a dataframe of the 36 individual category columns
     new = df.categories.str.split(';', expand=True)
     # extract a list of new column names for categories
@@ -33,15 +34,19 @@ def clean_data(df):
     # drop the original categories column from `df`
     df.drop(columns='categories', inplace=True)
 
+    # drop duplicates
     df.drop_duplicates(inplace=True)
 
-    return df
+    # drop rows where label value is not binary
+    df_binary = df[df['related'] != 2]
+
+    return df_binary
 
 
 def save_data(df, database_filename):
     """ Save the cleaned dataframe to a database """
     engine = create_engine(f'sqlite:///{database_filename}')
-    df.to_sql(database_filename, engine, index=False)
+    df.to_sql(database_filename, engine, index=False, if_exists='replace')
 
 
 def main():

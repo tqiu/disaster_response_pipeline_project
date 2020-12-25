@@ -46,6 +46,7 @@ model = joblib.load("../models/classifier.pkl")
 def index():
     """ Render web pages with plotly graphs which provides an overview of data """
 
+    ######################### Visual 1 ################################
     # extract data needed for visuals
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
@@ -56,8 +57,10 @@ def index():
                         xaxis_title="Genre", yaxis_title='Count')}, 
                         output_type='div')
 
+
+    ######################### Visual 2 ################################
     # make a dataframe to prepare for the following stacked bar plot
-    class_num = [0, 1, 2]
+    class_num = [0, 1]
     class_label = df.columns[-36:].tolist()
     class_dict = {}
     for label in class_label:
@@ -81,11 +84,6 @@ def index():
                     x=class_label,
                     y=df_class.loc[1],
                     name=class_num[1]
-                ),
-                gos.Bar(
-                    x=class_label,
-                    y=df_class.loc[2],
-                    name=class_num[2]
                 )
             ],
 
@@ -100,6 +98,41 @@ def index():
                 'barmode': 'stack',
                 'height': 500,
                 'margin': dict(l=50, r=50, t=60, b=150)
+            }
+        }
+    )
+
+
+    ######################### Visual 3 ################################
+    # calculate the cross-tab dataframe
+    df_tab = pd.crosstab(df['related'], df['aid_related'], normalize=True)
+    z1 = (df_tab.loc[0] * 100).round(2).tolist()
+    z2 = (df_tab.loc[1] * 100).round(2).tolist()
+
+    # make a heatmap showing the cross-tabulation between 'related' and 'aid_related' messages
+    graphs.append(
+        {
+            'data': [
+                gos.Heatmap(
+                    x=['0', '1'],
+                    y=['0', '1'],
+                    z=[z1, z2],
+                    colorscale='Blues',
+                    hoverinfo="z",
+                    hovertemplate='%{z}%<extra></extra>',
+                    colorbar={'ticksuffix': '%'}
+                )
+            ],
+            'layout': {
+                'title': "Cross Tabulation of Related and Aid-related Messages",
+                'yaxis': {
+                    'title': "Related",
+                    'type': 'category'
+                },
+                'xaxis': {
+                    'title': "Aid-related",
+                    'type': 'category'
+                }
             }
         }
     )
